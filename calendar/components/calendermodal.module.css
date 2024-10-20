@@ -1,0 +1,9 @@
+.textareaContainer {
+  width: 100%;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px
+}
