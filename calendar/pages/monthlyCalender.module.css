@@ -1,0 +1,19 @@
+.calender {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  list-style: none;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+
+.calenderItem {
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  padding: 10px;
+  aspect-ratio: 1 / 1;
+}
+
+.calenderItemNow {
+  border: 1px solid;
+  border-radius: 50%;
+}
