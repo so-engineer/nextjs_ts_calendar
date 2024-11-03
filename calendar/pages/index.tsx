@@ -1,10 +1,18 @@
-import MonthlyCalender from "./MonthlyCalender";
-import { getStaticProps } from "@/components/getStaticProps";
+import { getMonth, getYear } from 'date-fns';
 
-export {getStaticProps};
+export async function getServerSideProps() {
+  const initDate = new Date();
+  const currentYear = getYear(initDate);
+  const currentMonth = getMonth(initDate) + 1;
 
-export default function Home({initDate}) {
-  return (
-    <MonthlyCalender initDate={initDate} />
-  );
+  return {
+    redirect: {
+      destination: `/monthly/${currentYear}/${currentMonth}`,
+      permanent: true,
+    },
+  };
+}
+
+export default function Home() {
+  return null;
 }
