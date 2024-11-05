@@ -15,7 +15,7 @@ const modalStyle = {
     top: '25%',
     left: '25%',
     width: '50%',
-    height: '50%',
+    height: '25%',
     backgroundColor: 'black',
     borderRadius: '1rem',
     padding: '1.5rem',
