@@ -11,15 +11,15 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '@/components/Layout';
 import CalenderModal from '@/components/CalenderModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
 export async function getServerSideProps({ query }) {
   const year = parseInt(query.year, 10);
   const month = parseInt(query.month, 10);
+
   const initDate = new Date();
   const currentYear = getYear(initDate);
   // 月は0が1月を表すため+1する
@@ -44,13 +44,12 @@ export default function MonthlyCalender({
   currentMonth,
   currentDay,
 }) {
-  const { plan, setPlan } = useContext(PlanContext);
+  const { plan } = useContext(PlanContext);
   // Dateオブジェクトの月は0が1月を表すため-1する
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
 
   const targetYear = getYear(targetDate);
   const targetMonth = getMonth(targetDate) + 1;
-  const targetDay = getDate(targetDate);
 
   const currentDaysInMonth = getDaysInMonth(targetDate);
 
@@ -65,27 +64,30 @@ export default function MonthlyCalender({
   const [modalUpdateFlag, setModalUpdateFlag] = useState(false);
 
   const onClickPreMonth = () => {
-    setTargetDate(subMonths(targetDate, 1));
+    const newDate = subMonths(targetDate, 1);
+    moveMonth(newDate);
   };
 
   const onClickPostMonth = () => {
-    setTargetDate(addMonths(targetDate, 1));
+    const newDate = addMonths(targetDate, 1);
+    moveMonth(newDate);
   };
 
-  useEffect(() => {
-    router.push(`/monthly/${targetYear}/${targetMonth}`);
-  }, [targetDate]);
+  const moveMonth = (newDate) => {
+    setTargetDate(newDate);
+    const newYear = getYear(newDate);
+    const newMonth = getMonth(newDate) + 1;
+    router.push(`/monthly/${newYear}/${newMonth}`);
+  };
 
   const onChangeCalender = (e) => {
     const value = e.target.value;
-    if (value) {
-      router.push(`/${value}/${targetYear}/${targetMonth}}/${weekDays[0]}`);
-    }
+    router.push(`/${value}/${targetYear}/${targetMonth}/${weekDays[0]}`);
   };
 
-  const onClickModal = (year, month, day, filteredPlan) => {
+  const onClickModal = (targetYear, targetMonth, targetDay, filteredPlan) => {
     setModalIsOpen(true);
-    setModalTargetDay(`${year}-${month}-${day}`);
+    setModalTargetDay(`${targetYear}-${targetMonth}-${targetDay}`);
     // 予定があれば予定を初期値に設定する
     if (filteredPlan.length > 0) {
       setModalTitle(filteredPlan[0].title);
@@ -94,19 +96,18 @@ export default function MonthlyCalender({
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>月次カレンダー</title>
       </Head>
       <div className={utilsStyle.head}>
-        <div onClick={onClickPreMonth}>
+        <button onClick={onClickPreMonth} className={utilsStyle.icon}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={utilsStyle.icon}
           >
             <path
               strokeLinecap="round"
@@ -114,15 +115,14 @@ export default function MonthlyCalender({
               d="M15.75 19.5 8.25 12l7.5-7.5"
             />
           </svg>
-        </div>
-        <div onClick={onClickPostMonth}>
+        </button>
+        <button onClick={onClickPostMonth} className={utilsStyle.icon}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={utilsStyle.icon}
           >
             <path
               strokeLinecap="round"
@@ -130,7 +130,7 @@ export default function MonthlyCalender({
               d="m8.25 4.5 7.5 7.5-7.5 7.5"
             />
           </svg>
-        </div>
+        </button>
         <div>{`${targetYear}年${targetMonth}月`}</div>
         <select
           className={utilsStyle.headDropDown}
@@ -144,23 +144,23 @@ export default function MonthlyCalender({
       <ul className={monthlyStyle.calender}>
         {[...Array(currentDaysInMonth)].map((_, i) => {
           // 日を1から始める
-          const day = i + 1;
+          const targetDay = i + 1;
           const filteredPlan = plan.filter(
-            (item) => item.date === `${targetYear}-${targetMonth}-${day}`
+            (item) => item.date === `${targetYear}-${targetMonth}-${targetDay}`
           );
 
-          return day === currentDay &&
+          return targetDay === currentDay &&
             targetMonth === currentMonth &&
             targetYear === currentYear ? (
             <li
               key={i}
               className={monthlyStyle.calenderItem}
               onClick={() =>
-                onClickModal(targetYear, targetMonth, day, filteredPlan)
+                onClickModal(targetYear, targetMonth, targetDay, filteredPlan)
               }
             >
               {/* 今日の日付にマークを付ける */}
-              <span className={monthlyStyle.calenderItemNow}>{day}</span>
+              <span className={monthlyStyle.calenderItemNow}>{targetDay}</span>
               {/* フィルタリングされた最初のプランを表示(日付の重複は想定されないためこれでOK) */}
               {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
             </li>
@@ -169,10 +169,10 @@ export default function MonthlyCalender({
               key={i}
               className={monthlyStyle.calenderItem}
               onClick={() =>
-                onClickModal(targetYear, targetMonth, day, filteredPlan)
+                onClickModal(targetYear, targetMonth, targetDay, filteredPlan)
               }
             >
-              <span>{day}</span>
+              <span>{targetDay}</span>
               {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
             </li>
           );
@@ -187,6 +187,6 @@ export default function MonthlyCalender({
         modalUpdateFlag={modalUpdateFlag}
         setModalUpdateFlag={setModalUpdateFlag}
       />
-    </Layout>
+    </>
   );
 }

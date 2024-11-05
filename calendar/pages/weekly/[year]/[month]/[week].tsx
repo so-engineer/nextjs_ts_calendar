@@ -10,16 +10,15 @@ import {
   startOfWeek,
   subWeeks,
 } from 'date-fns';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '@/components/Layout';
 import CalenderModal from '@/components/CalenderModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
 export async function getServerSideProps({ query }) {
   const year = parseInt(query.year, 10);
   const month = parseInt(query.month, 10);
-  const week = parseInt(query.week, 10);
+
   const initDate = new Date();
   const currentYear = getYear(initDate);
   // 月は0が1月を表すため+1する
@@ -30,7 +29,6 @@ export async function getServerSideProps({ query }) {
     props: {
       year,
       month,
-      week,
       currentYear,
       currentMonth,
       currentDay,
@@ -41,21 +39,19 @@ export async function getServerSideProps({ query }) {
 export default function WeeklyCalender({
   year,
   month,
-  week,
   currentYear,
   currentMonth,
   currentDay,
 }) {
-  const { plan, setPlan } = useContext(PlanContext);
+  const { plan } = useContext(PlanContext);
 
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
 
   const targetYear = getYear(targetDate);
   const targetMonth = getMonth(targetDate) + 1;
-  const targetDay = getDate(targetDate);
 
   const start = startOfWeek(targetDate);
-  const weekDays = [...Array(7)].map((_, i) => getDate(addDays(start, i)));
+  const weekDays = [...Array(7)].map((_, i) => addDays(start, i));
 
   const router = useRouter();
 
@@ -65,27 +61,37 @@ export default function WeeklyCalender({
   const [modalUpdateFlag, setModalUpdateFlag] = useState(false);
 
   const onClickPreWeek = () => {
-    setTargetDate(subWeeks(targetDate, 1));
+    const newDate = subWeeks(targetDate, 1);
+    moveWeek(newDate);
   };
 
   const onClickPostWeek = () => {
-    setTargetDate(addWeeks(targetDate, 1));
+    const newDate = addWeeks(targetDate, 1);
+    moveWeek(newDate);
   };
 
-  useEffect(() => {
-    router.push(`/weekly/${targetYear}/${targetMonth}/${weekDays[0]}`);
-  }, [targetDate]);
+  const moveWeek = (newDate) => {
+    setTargetDate(newDate);
+    const newYear = getYear(newDate);
+    const newMonth = getMonth(newDate) + 1;
+    const start = startOfWeek(newDate);
+    const newWeekDays = [...Array(7)].map((_, i) => getDate(addDays(start, i)));
+    router.push(`/weekly/${newYear}/${newMonth}/${newWeekDays[0]}`);
+  };
 
   const onChangeCalender = (e) => {
     const value = e.target.value;
-    if (value) {
-      router.push(`/${value}/${targetYear}/${targetMonth}`);
-    }
+    router.push(`/${value}/${targetYear}/${targetMonth}`);
   };
 
-  const onClickModal = (year, month, day, filteredPlan) => {
+  const onClickModal = (
+    weekDayYear,
+    weekDayMonth,
+    weekDayDay,
+    filteredPlan
+  ) => {
     setModalIsOpen(true);
-    setModalTargetDay(`${year}-${month}-${day}`);
+    setModalTargetDay(`${weekDayYear}-${weekDayMonth}-${weekDayDay}`);
     // 予定があれば予定を初期値に設定する
     if (filteredPlan.length > 0) {
       setModalTitle(filteredPlan[0].title);
@@ -94,19 +100,18 @@ export default function WeeklyCalender({
   };
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>週次カレンダー</title>
       </Head>
       <div className={utilsStyle.head}>
-        <div onClick={onClickPreWeek}>
+        <button onClick={onClickPreWeek} className={utilsStyle.icon}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={utilsStyle.icon}
           >
             <path
               strokeLinecap="round"
@@ -114,15 +119,14 @@ export default function WeeklyCalender({
               d="M15.75 19.5 8.25 12l7.5-7.5"
             />
           </svg>
-        </div>
-        <div onClick={onClickPostWeek}>
+        </button>
+        <button onClick={onClickPostWeek} className={utilsStyle.icon}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={utilsStyle.icon}
           >
             <path
               strokeLinecap="round"
@@ -130,7 +134,7 @@ export default function WeeklyCalender({
               d="m8.25 4.5 7.5 7.5-7.5 7.5"
             />
           </svg>
-        </div>
+        </button>
         <div>{`${targetYear}年${targetMonth}月`}</div>
         <select
           className={utilsStyle.headDropDown}
@@ -142,36 +146,49 @@ export default function WeeklyCalender({
         </select>
       </div>
       <ul className={weeklyStyle.calender}>
-        {weekDays.map((i) => {
-          const day = i;
+        {weekDays.map((weekDay) => {
+          const weekDayYear = getYear(weekDay);
+          const weekDayMonth = getMonth(weekDay) + 1;
+          const weekDayDay = getDate(weekDay);
           const filteredPlan = plan.filter(
-            (item) => item.date === `${targetYear}-${targetMonth}-${day}`
+            (item) =>
+              item.date === `${weekDayYear}-${weekDayMonth}-${weekDayDay}`
           );
 
-          return day === currentDay &&
-            targetMonth === currentMonth &&
-            targetYear === currentYear ? (
+          return weekDayDay === currentDay &&
+            weekDayMonth === currentMonth &&
+            weekDayYear === currentYear ? (
             <li
-              key={day}
+              key={weekDayDay}
               className={weeklyStyle.calenderItem}
               onClick={() =>
-                onClickModal(targetYear, targetMonth, day, filteredPlan)
+                onClickModal(
+                  weekDayYear,
+                  weekDayMonth,
+                  weekDayDay,
+                  filteredPlan
+                )
               }
             >
               {/* 今日の日付にマークを付ける */}
-              <span className={weeklyStyle.calenderItemNow}>{day}</span>
+              <span className={weeklyStyle.calenderItemNow}>{weekDayDay}</span>
               {/* フィルタリングされた最初のプランを表示(日付の重複は想定されないためこれでOK) */}
               {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
             </li>
           ) : (
             <li
-              key={day}
+              key={weekDayDay}
               className={weeklyStyle.calenderItem}
               onClick={() =>
-                onClickModal(targetYear, targetMonth, day, filteredPlan)
+                onClickModal(
+                  weekDayYear,
+                  weekDayMonth,
+                  weekDayDay,
+                  filteredPlan
+                )
               }
             >
-              <span>{day}</span>
+              <span>{weekDayDay}</span>
               {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
             </li>
           );
@@ -186,6 +203,6 @@ export default function WeeklyCalender({
         modalUpdateFlag={modalUpdateFlag}
         setModalUpdateFlag={setModalUpdateFlag}
       />
-    </Layout>
+    </>
   );
 }
