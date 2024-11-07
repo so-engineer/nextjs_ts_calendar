@@ -2,11 +2,14 @@ import Head from 'next/head';
 import weeklyStyle from '../../../weekly.module.css';
 import utilsStyle from '../../../../styles/utils.module.css';
 import {
-  addDays,
   addWeeks,
+  eachDayOfInterval,
+  endOfWeek,
+  format,
   getDate,
   getMonth,
   getYear,
+  isSameDay,
   startOfWeek,
   subWeeks,
 } from 'date-fns';
@@ -18,40 +21,32 @@ import { PlanContext } from '@/components/context/PlanContext';
 export async function getServerSideProps({ query }) {
   const year = parseInt(query.year, 10);
   const month = parseInt(query.month, 10);
-
-  const initDate = new Date();
-  const currentYear = getYear(initDate);
-  // 月は0が1月を表すため+1する
-  const currentMonth = getMonth(initDate) + 1;
-  const currentDay = getDate(initDate);
+  const today = new Date().toString(); // 文字列として返す
 
   return {
     props: {
       year,
       month,
-      currentYear,
-      currentMonth,
-      currentDay,
+      today,
     },
   };
 }
 
-export default function WeeklyCalender({
-  year,
-  month,
-  currentYear,
-  currentMonth,
-  currentDay,
-}) {
+export default function WeeklyCalender({ year, month, today }) {
   const { plan } = useContext(PlanContext);
 
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
 
-  const targetYear = getYear(targetDate);
-  const targetMonth = getMonth(targetDate) + 1;
-
-  const start = startOfWeek(targetDate);
-  const weekDays = [...Array(7)].map((_, i) => addDays(start, i));
+  // const startOfMonthDay = startOfMonth(targetDate);
+  const startOfMonthWeekDate = startOfWeek(targetDate, {
+    weekStartsOn: 0,
+  }); // 日曜始まり
+  // const endOfMonthDay = endOfMonth(targetDate);
+  const endOfMonthWeekDate = endOfWeek(targetDate, { weekStartsOn: 0 });
+  const dateObjPerMonth = eachDayOfInterval({
+    start: startOfMonthWeekDate,
+    end: endOfMonthWeekDate,
+  });
 
   const router = useRouter();
 
@@ -74,27 +69,26 @@ export default function WeeklyCalender({
     setTargetDate(newDate);
     const newYear = getYear(newDate);
     const newMonth = getMonth(newDate) + 1;
-    const start = startOfWeek(newDate);
-    const newWeekDays = [...Array(7)].map((_, i) => getDate(addDays(start, i)));
-    router.push(`/weekly/${newYear}/${newMonth}/${newWeekDays[0]}`);
+    const startOfMonthWeekDate = startOfWeek(newDate, {
+      weekStartsOn: 0,
+    }); // 日曜始まり
+    router.push(
+      `/weekly/${newYear}/${newMonth}/${getDate(startOfMonthWeekDate)}`
+    );
   };
 
   const onChangeCalender = (e) => {
     const value = e.target.value;
-    router.push(`/${value}/${targetYear}/${targetMonth}`);
+    router.push(`/${value}/${year}/${month}`);
   };
 
-  const onClickModal = (
-    weekDayYear,
-    weekDayMonth,
-    weekDayDay,
-    filteredPlan
-  ) => {
+  const onClickModal = (dateObj, filteredPlan) => {
     setModalIsOpen(true);
-    setModalTargetDay(`${weekDayYear}-${weekDayMonth}-${weekDayDay}`);
+    const formattedDate = format(dateObj, 'yyyy-MM-dd');
+    setModalTargetDay(formattedDate);
     // 予定があれば予定を初期値に設定する
-    if (filteredPlan.length > 0) {
-      setModalTitle(filteredPlan[0].title);
+    if (filteredPlan) {
+      setModalTitle(filteredPlan);
       setModalUpdateFlag(true);
     }
   };
@@ -135,7 +129,7 @@ export default function WeeklyCalender({
             />
           </svg>
         </button>
-        <div>{`${targetYear}年${targetMonth}月`}</div>
+        <div>{`${year}年${month}月`}</div>
         <select
           className={utilsStyle.headDropDown}
           value="weekly"
@@ -145,51 +139,37 @@ export default function WeeklyCalender({
           <option value="weekly">週</option>
         </select>
       </div>
+      <ul className={weeklyStyle.calenderDayOfWeek}>
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+          <li key={i} className={weeklyStyle.calenderItemDayOfWeek}>
+            {d}
+          </li>
+        ))}
+      </ul>
       <ul className={weeklyStyle.calender}>
-        {weekDays.map((weekDay) => {
-          const weekDayYear = getYear(weekDay);
-          const weekDayMonth = getMonth(weekDay) + 1;
-          const weekDayDay = getDate(weekDay);
-          const filteredPlan = plan.filter(
-            (item) =>
-              item.date === `${weekDayYear}-${weekDayMonth}-${weekDayDay}`
-          );
+        {dateObjPerMonth.map((dateObj) => {
+          const formattedDate = format(dateObj, 'yyyy-MM-dd');
+          const targetDay = getDate(dateObj);
+          const filteredPlan = plan.find((item) => item.date === formattedDate);
 
-          return weekDayDay === currentDay &&
-            weekDayMonth === currentMonth &&
-            weekDayYear === currentYear ? (
+          return isSameDay(dateObj, today) ? (
             <li
-              key={weekDayDay}
+              key={dateObj}
               className={weeklyStyle.calenderItem}
-              onClick={() =>
-                onClickModal(
-                  weekDayYear,
-                  weekDayMonth,
-                  weekDayDay,
-                  filteredPlan
-                )
-              }
+              onClick={() => onClickModal(dateObj, filteredPlan)}
             >
               {/* 今日の日付にマークを付ける */}
-              <span className={weeklyStyle.calenderItemNow}>{weekDayDay}</span>
-              {/* フィルタリングされた最初のプランを表示(日付の重複は想定されないためこれでOK) */}
-              {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
+              <span className={weeklyStyle.calenderItemNow}>{targetDay}</span>
+              {filteredPlan && <p>{filteredPlan.title}</p>}
             </li>
           ) : (
             <li
-              key={weekDayDay}
+              key={dateObj}
               className={weeklyStyle.calenderItem}
-              onClick={() =>
-                onClickModal(
-                  weekDayYear,
-                  weekDayMonth,
-                  weekDayDay,
-                  filteredPlan
-                )
-              }
+              onClick={() => onClickModal(dateObj, filteredPlan)}
             >
-              <span>{weekDayDay}</span>
-              {filteredPlan.length > 0 && <p>{filteredPlan[0].title}</p>}
+              <span>{targetDay}</span>
+              {filteredPlan && <p>{filteredPlan.title}</p>}
             </li>
           );
         })}
