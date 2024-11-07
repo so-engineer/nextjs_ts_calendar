@@ -151,24 +151,19 @@ export default function WeeklyCalender({ year, month, today }) {
           const formattedDate = format(dateObj, 'yyyy-MM-dd');
           const targetDay = getDate(dateObj);
           const filteredPlan = plan.find((item) => item.date === formattedDate);
-
-          return isSameDay(dateObj, today) ? (
+          return (
             <li
               key={dateObj}
               className={weeklyStyle.calenderItem}
               onClick={() => onClickModal(dateObj, filteredPlan)}
             >
-              {/* 今日の日付にマークを付ける */}
-              <span className={weeklyStyle.calenderItemNow}>{targetDay}</span>
-              {filteredPlan && <p>{filteredPlan.title}</p>}
-            </li>
-          ) : (
-            <li
-              key={dateObj}
-              className={weeklyStyle.calenderItem}
-              onClick={() => onClickModal(dateObj, filteredPlan)}
-            >
-              <span>{targetDay}</span>
+              <span
+                className={
+                  isSameDay(dateObj, today) ? weeklyStyle.calenderItemNow : ''
+                }
+              >
+                {targetDay}
+              </span>
               {filteredPlan && <p>{filteredPlan.title}</p>}
             </li>
           );
