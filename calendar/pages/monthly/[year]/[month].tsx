@@ -20,7 +20,20 @@ import { useRouter } from 'next/router';
 import CalenderModal from '@/components/CalenderModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
-export async function getServerSideProps({ query }) {
+type getServerSidePropsType = {
+  query: {
+    year: string;
+    month: string;
+  };
+};
+
+type MonthlyCalenderProps = {
+  year: number;
+  month: number;
+  today: Date;
+};
+
+export async function getServerSideProps({ query }: getServerSidePropsType) {
   const year = parseInt(query.year, 10);
   const month = parseInt(query.month, 10);
   const today = new Date().toString(); // 文字列として返す
@@ -34,7 +47,11 @@ export async function getServerSideProps({ query }) {
   };
 }
 
-export default function MonthlyCalender({ year, month, today }) {
+export default function MonthlyCalender({
+  year,
+  month,
+  today,
+}: MonthlyCalenderProps) {
   const { plan } = useContext(PlanContext);
   // Dateオブジェクトの月は0が1月を表すため-1する
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
@@ -67,19 +84,22 @@ export default function MonthlyCalender({ year, month, today }) {
     moveMonth(newDate);
   };
 
-  const moveMonth = (newDate) => {
+  const moveMonth = (newDate: Date) => {
     setTargetDate(newDate);
     const newYear = getYear(newDate);
     const newMonth = getMonth(newDate) + 1;
     router.push(`/monthly/${newYear}/${newMonth}`);
   };
 
-  const onChangeCalender = (e) => {
+  const onChangeCalender = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     router.push(`/${value}/${year}/${month}/${getDate(startOfMonthWeekDate)}`);
   };
 
-  const onClickModal = (dateObj, filteredPlan) => {
+  const onClickModal = (
+    dateObj: Date,
+    filteredPlan: { date: string; title: string } | undefined
+  ) => {
     setModalIsOpen(true);
     const formattedDate = format(dateObj, 'yyyy-MM-dd');
     setModalTargetDay(formattedDate);
@@ -150,7 +170,7 @@ export default function MonthlyCalender({ year, month, today }) {
           const filteredPlan = plan.find((item) => item.date === formattedDate);
           return (
             <li
-              key={dateObj}
+              key={formattedDate}
               className={monthlyStyle.calenderItem}
               onClick={() => onClickModal(dateObj, filteredPlan)}
             >

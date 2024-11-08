@@ -1,9 +1,26 @@
-import { createContext, useState } from 'react';
+import { createContext, Dispatch, SetStateAction, useState } from 'react';
 
-export const PlanContext = createContext();
+type Plan = {
+  date: string;
+  title: string;
+}[];
 
-export const PlanProvider = ({ children }) => {
-  const [plan, setPlan] = useState([]);
+type PlanContextType = {
+  plan: Plan;
+  setPlan: Dispatch<SetStateAction<Plan>>;
+};
+
+type PlanProviderProps = {
+  children: React.ReactNode;
+};
+
+export const PlanContext = createContext<PlanContextType>({
+  plan: [],
+  setPlan: () => {},
+});
+
+export const PlanProvider = ({ children }: PlanProviderProps) => {
+  const [plan, setPlan] = useState<Plan>([]);
 
   return (
     <PlanContext.Provider value={{ plan, setPlan }}>

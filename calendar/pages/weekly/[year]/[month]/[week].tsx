@@ -18,7 +18,20 @@ import { useRouter } from 'next/router';
 import CalenderModal from '@/components/CalenderModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
-export async function getServerSideProps({ query }) {
+type getServerSidePropsType = {
+  query: {
+    year: string;
+    month: string;
+  };
+};
+
+type WeeklyCalenderProps = {
+  year: number;
+  month: number;
+  today: Date;
+};
+
+export async function getServerSideProps({ query }: getServerSidePropsType) {
   const year = parseInt(query.year, 10);
   const month = parseInt(query.month, 10);
   const today = new Date().toString(); // 文字列として返す
@@ -32,16 +45,18 @@ export async function getServerSideProps({ query }) {
   };
 }
 
-export default function WeeklyCalender({ year, month, today }) {
+export default function WeeklyCalender({
+  year,
+  month,
+  today,
+}: WeeklyCalenderProps) {
   const { plan } = useContext(PlanContext);
 
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
 
-  // const startOfMonthDay = startOfMonth(targetDate);
   const startOfMonthWeekDate = startOfWeek(targetDate, {
     weekStartsOn: 0,
   }); // 日曜始まり
-  // const endOfMonthDay = endOfMonth(targetDate);
   const endOfMonthWeekDate = endOfWeek(targetDate, { weekStartsOn: 0 });
   const dateObjPerMonth = eachDayOfInterval({
     start: startOfMonthWeekDate,
@@ -65,7 +80,7 @@ export default function WeeklyCalender({ year, month, today }) {
     moveWeek(newDate);
   };
 
-  const moveWeek = (newDate) => {
+  const moveWeek = (newDate: Date) => {
     setTargetDate(newDate);
     const newYear = getYear(newDate);
     const newMonth = getMonth(newDate) + 1;
@@ -77,18 +92,21 @@ export default function WeeklyCalender({ year, month, today }) {
     );
   };
 
-  const onChangeCalender = (e) => {
+  const onChangeCalender = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     router.push(`/${value}/${year}/${month}`);
   };
 
-  const onClickModal = (dateObj, filteredPlan) => {
+  const onClickModal = (
+    dateObj: Date,
+    filteredPlan: { date: string; title: string } | undefined
+  ) => {
     setModalIsOpen(true);
     const formattedDate = format(dateObj, 'yyyy-MM-dd');
     setModalTargetDay(formattedDate);
     // 予定があれば予定を初期値に設定する
     if (filteredPlan) {
-      setModalTitle(filteredPlan);
+      setModalTitle(filteredPlan.title);
       setModalUpdateFlag(true);
     }
   };
@@ -153,7 +171,7 @@ export default function WeeklyCalender({ year, month, today }) {
           const filteredPlan = plan.find((item) => item.date === formattedDate);
           return (
             <li
-              key={dateObj}
+              key={formattedDate}
               className={weeklyStyle.calenderItem}
               onClick={() => onClickModal(dateObj, filteredPlan)}
             >

@@ -1,9 +1,10 @@
 import { useContext } from 'react';
 import Modal from 'react-modal';
+import { Styles } from 'react-modal';
 import calenderModalStyle from './calenderModal.module.css';
 import { PlanContext } from './context/PlanContext';
 
-const modalStyle = {
+const modalStyle: Styles = {
   overlay: {
     position: 'fixed',
     top: 0,
@@ -22,6 +23,16 @@ const modalStyle = {
   },
 };
 
+type CalenderModalProps = {
+  modalIsOpen: boolean;
+  setModalIsOpen: (modalIsOpen: boolean) => void;
+  modalTargetDay: string;
+  modalTitle: string;
+  setModalTitle: (modalTitle: string) => void;
+  modalUpdateFlag: boolean;
+  setModalUpdateFlag: (modalUpdateFlag: boolean) => void;
+};
+
 export default function CalenderModal({
   modalIsOpen,
   setModalIsOpen,
@@ -30,10 +41,10 @@ export default function CalenderModal({
   setModalTitle,
   modalUpdateFlag,
   setModalUpdateFlag,
-}) {
+}: CalenderModalProps) {
   const { plan, setPlan } = useContext(PlanContext);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setPlan([...plan, { date: modalTargetDay, title: modalTitle }]);
     setModalTitle('');
