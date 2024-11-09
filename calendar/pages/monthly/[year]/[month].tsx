@@ -17,7 +17,7 @@ import {
 } from 'date-fns';
 import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-import CalenderModal from '@/components/CalenderModal';
+import CalendarModal from '@/components/CalendarModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
 type getServerSidePropsType = {
@@ -27,7 +27,7 @@ type getServerSidePropsType = {
   };
 };
 
-type MonthlyCalenderProps = {
+type MonthlyCalendarProps = {
   year: number;
   month: number;
   today: Date;
@@ -47,11 +47,11 @@ export async function getServerSideProps({ query }: getServerSidePropsType) {
   };
 }
 
-export default function MonthlyCalender({
+export default function MonthlyCalendar({
   year,
   month,
   today,
-}: MonthlyCalenderProps) {
+}: MonthlyCalendarProps) {
   const { plan } = useContext(PlanContext);
   // Dateオブジェクトの月は0が1月を表すため-1する
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
@@ -91,7 +91,7 @@ export default function MonthlyCalender({
     router.push(`/monthly/${newYear}/${newMonth}`);
   };
 
-  const onChangeCalender = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const onChangeCalendar = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     router.push(`/${value}/${year}/${month}/${getDate(startOfMonthWeekDate)}`);
   };
@@ -150,20 +150,20 @@ export default function MonthlyCalender({
         <select
           className={utilsStyle.headDropDown}
           value="monthly"
-          onChange={onChangeCalender}
+          onChange={onChangeCalendar}
         >
           <option value="monthly">月</option>
           <option value="weekly">週</option>
         </select>
       </div>
-      <ul className={monthlyStyle.calenderDayOfWeek}>
+      <ul className={monthlyStyle.calendarDayOfWeek}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-          <li key={i} className={monthlyStyle.calenderItemDayOfWeek}>
+          <li key={i} className={monthlyStyle.calendarItemDayOfWeek}>
             {d}
           </li>
         ))}
       </ul>
-      <ul className={monthlyStyle.calender}>
+      <ul className={monthlyStyle.calendar}>
         {dateObjPerMonth.map((dateObj) => {
           const formattedDate = format(dateObj, 'yyyy-MM-dd');
           const targetDay = getDate(dateObj);
@@ -171,12 +171,12 @@ export default function MonthlyCalender({
           return (
             <li
               key={formattedDate}
-              className={monthlyStyle.calenderItem}
+              className={monthlyStyle.calendarItem}
               onClick={() => onClickModal(dateObj, filteredPlan)}
             >
               <span
                 className={
-                  isSameDay(dateObj, today) ? monthlyStyle.calenderItemNow : ''
+                  isSameDay(dateObj, today) ? monthlyStyle.calendarItemNow : ''
                 }
               >
                 {targetDay}
@@ -186,7 +186,7 @@ export default function MonthlyCalender({
           );
         })}
       </ul>
-      <CalenderModal
+      <CalendarModal
         modalIsOpen={modalIsOpen}
         setModalIsOpen={setModalIsOpen}
         modalTargetDay={modalTargetDay}

@@ -15,7 +15,7 @@ import {
 } from 'date-fns';
 import { useContext, useState } from 'react';
 import { useRouter } from 'next/router';
-import CalenderModal from '@/components/CalenderModal';
+import CalendarModal from '@/components/CalendarModal';
 import { PlanContext } from '@/components/context/PlanContext';
 
 type getServerSidePropsType = {
@@ -25,7 +25,7 @@ type getServerSidePropsType = {
   };
 };
 
-type WeeklyCalenderProps = {
+type WeeklyCalendarProps = {
   year: number;
   month: number;
   today: Date;
@@ -45,11 +45,11 @@ export async function getServerSideProps({ query }: getServerSidePropsType) {
   };
 }
 
-export default function WeeklyCalender({
+export default function WeeklyCalendar({
   year,
   month,
   today,
-}: WeeklyCalenderProps) {
+}: WeeklyCalendarProps) {
   const { plan } = useContext(PlanContext);
 
   const [targetDate, setTargetDate] = useState(new Date(year, month - 1));
@@ -92,7 +92,7 @@ export default function WeeklyCalender({
     );
   };
 
-  const onChangeCalender = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const onChangeCalendar = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     router.push(`/${value}/${year}/${month}`);
   };
@@ -151,20 +151,20 @@ export default function WeeklyCalender({
         <select
           className={utilsStyle.headDropDown}
           value="weekly"
-          onChange={onChangeCalender}
+          onChange={onChangeCalendar}
         >
           <option value="monthly">月</option>
           <option value="weekly">週</option>
         </select>
       </div>
-      <ul className={weeklyStyle.calenderDayOfWeek}>
+      <ul className={weeklyStyle.calendarDayOfWeek}>
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
-          <li key={i} className={weeklyStyle.calenderItemDayOfWeek}>
+          <li key={i} className={weeklyStyle.calendarItemDayOfWeek}>
             {d}
           </li>
         ))}
       </ul>
-      <ul className={weeklyStyle.calender}>
+      <ul className={weeklyStyle.calendar}>
         {dateObjPerMonth.map((dateObj) => {
           const formattedDate = format(dateObj, 'yyyy-MM-dd');
           const targetDay = getDate(dateObj);
@@ -172,12 +172,12 @@ export default function WeeklyCalender({
           return (
             <li
               key={formattedDate}
-              className={weeklyStyle.calenderItem}
+              className={weeklyStyle.calendarItem}
               onClick={() => onClickModal(dateObj, filteredPlan)}
             >
               <span
                 className={
-                  isSameDay(dateObj, today) ? weeklyStyle.calenderItemNow : ''
+                  isSameDay(dateObj, today) ? weeklyStyle.calendarItemNow : ''
                 }
               >
                 {targetDay}
@@ -187,7 +187,7 @@ export default function WeeklyCalender({
           );
         })}
       </ul>
-      <CalenderModal
+      <CalendarModal
         modalIsOpen={modalIsOpen}
         setModalIsOpen={setModalIsOpen}
         modalTargetDay={modalTargetDay}

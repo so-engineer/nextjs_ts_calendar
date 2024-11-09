@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import Modal from 'react-modal';
 import { Styles } from 'react-modal';
-import calenderModalStyle from './CalenderModal.module.css';
+import calendarModalStyle from './calendarModal.module.css';
 import { PlanContext } from './context/PlanContext';
 
 const modalStyle: Styles = {
@@ -23,7 +23,7 @@ const modalStyle: Styles = {
   },
 };
 
-type CalenderModalProps = {
+type CalendarModalProps = {
   modalIsOpen: boolean;
   setModalIsOpen: (modalIsOpen: boolean) => void;
   modalTargetDay: string;
@@ -33,7 +33,7 @@ type CalenderModalProps = {
   setModalUpdateFlag: (modalUpdateFlag: boolean) => void;
 };
 
-export default function CalenderModal({
+export default function CalendarModal({
   modalIsOpen,
   setModalIsOpen,
   modalTargetDay,
@@ -41,7 +41,7 @@ export default function CalenderModal({
   setModalTitle,
   modalUpdateFlag,
   setModalUpdateFlag,
-}: CalenderModalProps) {
+}: CalendarModalProps) {
   const { plan, setPlan } = useContext(PlanContext);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -101,19 +101,19 @@ export default function CalenderModal({
               value={modalTitle}
               onChange={(e) => setModalTitle(e.target.value)}
               required
-              className={calenderModalStyle.textareaContainer}
+              className={calendarModalStyle.textareaContainer}
               rows={10}
             />
           </div>
           <div>
             {modalUpdateFlag === false ? (
               // 予定がなければ保存を表示
-              <div className={calenderModalStyle.buttonContainer}>
+              <div className={calendarModalStyle.buttonContainer}>
                 <button type="submit">保存</button>
               </div>
             ) : (
               // 予定があれば更新と削除を表示
-              <div className={calenderModalStyle.buttonContainer}>
+              <div className={calendarModalStyle.buttonContainer}>
                 <button type="button" onClick={onClickUpdate}>
                   更新
                 </button>

@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import styles from './layout.module.css';
+import styles from './Layout.module.css';
 
 type LayoutProps = { children: React.ReactNode };
 
