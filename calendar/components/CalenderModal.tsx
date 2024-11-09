@@ -1,7 +1,7 @@
 import { useContext } from 'react';
 import Modal from 'react-modal';
 import { Styles } from 'react-modal';
-import calenderModalStyle from './calenderModal.module.css';
+import calenderModalStyle from './calendermodal.module.css';
 import { PlanContext } from './context/PlanContext';
 
 const modalStyle: Styles = {
